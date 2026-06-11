@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuestro Cine Privado 🎬</title>
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
             margin: 0;
             padding: 0;
@@ -14,26 +17,88 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             min-height: 100vh;
+            padding: 20px 10px;
         }
         h1 {
-            font-size: 1.5rem;
-            margin-bottom: 20px;
+            font-size: 1.4rem;
+            margin: 0 0 15px 0;
             color: #ff79c6;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
         }
-        .contenedor-cine {
-            width: 90%;
-            max-width: 800px;
-            background: #1e1e1e;
-            padding: 10px;
-            border-radius: 12px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
-        }
-        video {
+        .sala-cine {
             width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .contenedor-video {
+            width: 100%;
+            aspect-ratio: 16 / 9; /* Proporción estándar de cine */
+            background: #000000;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        /* Contenedor Base del Chat */
+        .contenedor-chat {
+            width: 100%;
+            background: #1e1e1e;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            height: 300px; /* Tamaño cómodo para el celular */
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
+            overflow: hidden;
+        }
+        .pantalla-mensajes {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .mensaje-demo {
+            background: #2a2a2a;
+            padding: 8px 12px;
             border-radius: 8px;
+            font-size: 0.9rem;
+            max-width: 85%;
+            align-self: flex-start;
+            border-left: 4px solid #ff79c6;
+        }
+        .area-input {
+            display: flex;
+            padding: 10px;
+            background: #151515;
+            gap: 10px;
+        }
+        .area-input input {
+            flex: 1;
+            background: #2a2a2a;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: white;
             outline: none;
+            font-size: 0.95rem;
+        }
+        .area-input button {
+            background: #ff79c6;
+            color: #121212;
+            border: none;
+            padding: 0 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.95rem;
         }
     </style>
 </head>
@@ -41,11 +106,22 @@
 
     <h1>🎬 Sala de Cine de Caro</h1>
 
-    <div class="contenedor-cine">
-        <video id="reproductor" controls playsinline>
-            <source src="https://docs.google.com/uc?export=download&id=1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt" type="video/mp4">
-            Tu navegador no soporta este formato de video.
-        </video>
+    <div class="sala-cine">
+        <div class="contenedor-video">
+            <iframe src="https://drive.google.com/file/d/1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt/preview" allow="autoplay"></iframe>
+        </div>
+
+        <div class="contenedor-chat">
+            <div class="pantalla-mensajes" id="chat-box">
+                <div class="mensaje-demo">
+                    <strong>Sistema:</strong> ¡Bienvenidas al cine privado! Los mensajes aparecerán aquí abajo del video. ✨
+                </div>
+            </div>
+            <div class="area-input">
+                <input type="text" placeholder="Escribe un mensaje aquí..." disabled>
+                <button disabled>Enviar</button>
+            </div>
+        </div>
     </div>
 
 </body>
