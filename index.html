@@ -1,1 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuestro Cine Privado 🎬</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            font-family: Arial, sans-serif;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #ff79c6;
+        }
+        .contenedor-cine {
+            width: 90%;
+            max-width: 800px;
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.5);
+        }
+        video {
+            width: 100%;
+            border-radius: 8px;
+            outline: none;
+        }
+    </style>
+</head>
+<body>
 
+    <h1>🎬 Sala de Cine de Caro</h1>
+
+    <div class="contenedor-cine">
+        <video id="reproductor" controls playsinline>
+            <source src="https://docs.google.com/uc?export=download&id=1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt" type="video/mp4">
+            Tu navegador no soporta este formato de video.
+        </video>
+    </div>
+
+</body>
+</html>
