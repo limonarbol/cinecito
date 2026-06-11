@@ -6,6 +6,7 @@
     <title>Nuestro Cine Privado 🎬</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -16,24 +17,28 @@
             min-height: 100vh; padding: 20px 10px;
         }
         h1 { font-size: 1.4rem; margin: 0 0 15px 0; color: #ff79c6; }
-        .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 15px; }
+        .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 12px; }
+        
         .contenedor-video {
             width: 100%; aspect-ratio: 16 / 9;
             background: #000000; border-radius: 12px;
             box-shadow: 0px 4px 15px rgba(0,0,0,0.6); overflow: hidden;
         }
-        iframe { width: 100%; height: 100%; border: none; }
+        #player { width: 100%; height: 100%; border: none; }
         
-        /* Botones del Panel de Control */
-        .controles-sala {
-            display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 5px;
+        /* Panel para Cambiar Video en Vivo */
+        .panel-cambiar-video {
+            display: flex; gap: 10px; width: 100%; background: #1e1e1e;
+            padding: 10px; border-radius: 12px; box-shadow: 0px 4px 15px rgba(0,0,0,0.3);
         }
-        .btn-control {
-            background: #282a36; color: #ff79c6; border: 2px solid #ff79c6;
-            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;
-            font-size: 0.9rem; transition: 0.2s;
+        .panel-cambiar-video input {
+            flex: 1; background: #2a2a2a; border: 1px solid #444; padding: 10px;
+            border-radius: 8px; color: white; outline: none; font-size: 0.9rem;
         }
-        .btn-control:hover { background: #ff79c6; color: #121212; }
+        .panel-cambiar-video button {
+            background: #ff79c6; color: #121212; border: none; padding: 0 15px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+        }
 
         /* Estructura del Chat */
         .contenedor-chat {
@@ -68,12 +73,12 @@
 
     <div class="sala-cine">
         <div class="contenedor-video">
-            <iframe id="pantalla-drive" src="https://drive.google.com/file/d/1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt/preview" allow="autoplay"></iframe>
+            <div id="player"></div>
         </div>
 
-        <div class="controles-sala">
-            <button class="btn-control" onclick="enviarComando('PLAY')">▶ Sincronizar Play</button>
-            <button class="btn-control" onclick="enviarComando('PAUSE')">⏸ Sincronizar Pausa</button>
+        <div class="panel-cambiar-video">
+            <input type="text" id="url-video" placeholder="Pega aquí el link de YouTube...">
+            <button id="btn-cambiar-video">Cambiar video</button>
         </div>
 
         <div class="contenedor-chat">
@@ -86,10 +91,9 @@
     </div>
 
     <script>
-        // Ventana para asignar el nombre al entrar
         const miNombre = prompt("Introduce tu nombre para el cine:") || "Invitada";
 
-        // TUS CREDENCIALES REALES DE CINECITO INYECTADAS:
+        // CONFIGURACIÓN DE TU BASE DE DATOS DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyB_en_iCNtBhIyDczHAka1oxUel6c7hvbo",
             authDomain: "cinecito-c36b3.firebaseapp.com",
@@ -100,13 +104,93 @@
             appId: "1:41821063218:web:a18b16f0ca4f003167142b"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const chatRef = database.ref('cine/chat');
-        const controlRef = database.ref('cine/control');
+        const videoRef = database.ref('cine/videoState');
+        const currentVideoRef = database.ref('cine/currentVideoId');
 
-        // LÓGICA DEL CHAT INTERACTIVO
+        let player;
+        let esBloqueoInmediato = false;
+        let actualVideoId = 'S0Z8Z7-NszA'; // Video inicial de prueba
+
+        function onYouTubeIframeAPIReady() {
+            // Primero leemos qué video está activo en Firebase para cargar el mismo
+            currentVideoRef.on('value', (snapshot) => {
+                const idFromDb = snapshot.val();
+                if (idFromDb) {
+                    actualVideoId = idFromDb;
+                }
+                
+                if (!player) {
+                    player = new YT.Player('player', {
+                        videoId: actualVideoId,
+                        playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
+                        events: { 'onStateChange': onPlayerStateChange }
+                    });
+                } else {
+                    player.cueVideoById(actualVideoId);
+                }
+            });
+        }
+
+        // Detectar si TÚ (Caro) pausas, reproduces o adelantas el video
+        function onPlayerStateChange(event) {
+            if (esBloqueoInmediato) return;
+
+            if (miNombre.toLowerCase() === 'caro') {
+                videoRef.set({
+                    estado: event.data,
+                    tiempo: player.getCurrentTime(),
+                    trigger: Date.now()
+                });
+            }
+        }
+
+        // Escuchar los comandos de Play/Pausa/Tiempo
+        videoRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data || !player || !player.getPlayerState) return;
+
+            esBloqueoInmediato = true;
+
+            if (Math.abs(player.getCurrentTime() - data.tiempo) > 2) {
+                player.seekTo(data.tiempo, true);
+            }
+
+            if (data.estado === YT.PlayerState.PLAYING && player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                player.playVideo();
+            } else if (data.estado === YT.PlayerState.PAUSED && player.getPlayerState() !== YT.PlayerState.PAUSED) {
+                player.pauseVideo();
+            }
+
+            setTimeout(() => { esBloqueoInmediato = false; }, 600);
+        });
+
+        // LÓGICA PARA CAMBIAR EL VIDEO EN EL MOMENTO
+        document.getElementById('btn-cambiar-video').addEventListener('click', cambiarVideoGlobal);
+        
+        function cambiarVideoGlobal() {
+            const urlInput = document.getElementById('url-video').value.trim();
+            if (!urlInput) return;
+
+            let videoId = urlInput;
+            
+            // Función interactiva para extraer el ID si pegan un link completo
+            if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                const match = urlInput.match(regExp);
+                if (match && match[2].length === 11) {
+                    videoId = match[2];
+                }
+            }
+
+            // Guardamos el nuevo ID en Firebase para cambiar el video a ambas
+            currentVideoRef.set(videoId);
+            document.getElementById('url-video').value = "";
+        }
+
+        // LÓGICA DEL CHAT
         document.getElementById('send-btn').addEventListener('click', enviarMensaje);
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') enviarMensaje();
@@ -134,36 +218,6 @@
             nuevoMensaje.innerHTML = `<strong>${msg.autor}:</strong> ${msg.texto}`;
             
             chatBox.appendChild(nuevoMensaje);
-            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll al último mensaje
-        });
-
-        // LÓGICA DEL CONTROL DE SINCRONÍA
-        function enviarComando(accion) {
-            controlRef.set({
-                comando: accion,
-                usuario: miNombre,
-                trigger: Date.now()
-            });
-        }
-
-        controlRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (!data) return;
-            
-            const chatBox = document.getElementById('chat-box');
-            const aviso = document.createElement('div');
-            aviso.style.color = '#ff79c6';
-            aviso.style.fontSize = '0.85rem';
-            aviso.style.textAlign = 'center';
-            aviso.style.margin = '5px 0';
-            
-            if (data.comando === 'PLAY') {
-                aviso.innerText = `📢 ${data.usuario} dio Play. ¡Dale Play a tu video!`;
-            } else if (data.comando === 'PAUSE') {
-                aviso.innerText = `📢 ${data.usuario} puso Pausa. Pausa tu video.`;
-            }
-            
-            chatBox.appendChild(aviso);
             chatBox.scrollTop = chatBox.scrollHeight;
         });
     </script>
