@@ -16,7 +16,7 @@
             display: flex; flex-direction: column; align-items: center;
             min-height: 100vh; padding: 20px 10px;
         }
-        h1 { font-size: 1.4rem; margin: 0 0 15px 0; color: #ff79c6; }
+        h1 { font-size: 1.4rem; margin: 0 0 15px 0; color: #ff79c6; text-shadow: 0px 2px 4px rgba(0,0,0,0.5); }
         .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 12px; }
         
         .contenedor-video {
@@ -93,7 +93,7 @@
     <script>
         const miNombre = prompt("Introduce tu nombre para el cine:") || "Invitada";
 
-        // CONFIGURACIÓN DE TU BASE DE DATOS DE FIREBASE
+        // TUS CREDENCIALES DE FIREBASE (YA CONFIGURADAS)
         const firebaseConfig = {
             apiKey: "AIzaSyB_en_iCNtBhIyDczHAka1oxUel6c7hvbo",
             authDomain: "cinecito-c36b3.firebaseapp.com",
@@ -111,16 +111,15 @@
         const currentVideoRef = database.ref('cine/currentVideoId');
 
         let player;
-        let esBloqueoInmediato = false;
-        let actualVideoId = 'S0Z8Z7-NszA'; // Video inicial de prueba
+        let ignorarEventosLocales = false;
+        let actualVideoId = 'S0Z8Z7-NszA'; // Video inicial por defecto
 
         function onYouTubeIframeAPIReady() {
-            // Primero leemos qué video está activo en Firebase para cargar el mismo
             currentVideoRef.on('value', (snapshot) => {
                 const idFromDb = snapshot.val();
-                if (idFromDb) {
-                    actualVideoId = idFromDb;
-                }
+                if (!idFromDb) return;
+                
+                actualVideoId = idFromDb;
                 
                 if (!player) {
                     player = new YT.Player('player', {
@@ -129,45 +128,53 @@
                         events: { 'onStateChange': onPlayerStateChange }
                     });
                 } else {
-                    player.cueVideoById(actualVideoId);
+                    player.loadVideoById(actualVideoId);
                 }
             });
         }
 
-        // Detectar si TÚ (Caro) pausas, reproduces o adelantas el video
+        // CONTROLADOR DE EVENTOS LOCALES (Solo envía si te llamas "Caro")
         function onPlayerStateChange(event) {
-            if (esBloqueoInmediato) return;
+            if (ignorarEventosLocales) return; 
 
-            if (miNombre.toLowerCase() === 'caro') {
+            if (miNombre.trim().toLowerCase() === 'caro') {
                 videoRef.set({
                     estado: event.data,
                     tiempo: player.getCurrentTime(),
+                    usuarioHost: miNombre,
                     trigger: Date.now()
                 });
             }
         }
 
-        // Escuchar los comandos de Play/Pausa/Tiempo
+        // RECEPTOR DE COMANDOS (Sincronización automática sin bucles)
         videoRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data || !player || !player.getPlayerState) return;
 
-            esBloqueoInmediato = true;
+            // Si eres tú misma ("Caro"), ignora la orden para evitar trabas en tu compu
+            if (miNombre.trim().toLowerCase() === 'caro') return;
 
+            // Bloqueo temporal para el iPhone de ella
+            ignorarEventosLocales = true;
+
+            // Sincronizar la línea de tiempo si se desfasa por más de 2 segundos
             if (Math.abs(player.getCurrentTime() - data.tiempo) > 2) {
                 player.seekTo(data.tiempo, true);
             }
 
+            // Forzar Play o Pausa físico en su pantalla
             if (data.estado === YT.PlayerState.PLAYING && player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.playVideo();
             } else if (data.estado === YT.PlayerState.PAUSED && player.getPlayerState() !== YT.PlayerState.PAUSED) {
                 player.pauseVideo();
             }
 
-            setTimeout(() => { esBloqueoInmediato = false; }, 600);
+            // Volvemos a activar la escucha local después de la estabilización
+            setTimeout(() => { ignorarEventosLocales = false; }, 800);
         });
 
-        // LÓGICA PARA CAMBIAR EL VIDEO EN EL MOMENTO
+        // FUNCIONALIDAD PARA CAMBIAR VIDEO EN EL MOMENTO
         document.getElementById('btn-cambiar-video').addEventListener('click', cambiarVideoGlobal);
         
         function cambiarVideoGlobal() {
@@ -176,7 +183,7 @@
 
             let videoId = urlInput;
             
-            // Función interactiva para extraer el ID si pegan un link completo
+            // Filtro interactivo para limpiar enlaces de YouTube
             if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
                 const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 const match = urlInput.match(regExp);
@@ -185,7 +192,6 @@
                 }
             }
 
-            // Guardamos el nuevo ID en Firebase para cambiar el video a ambas
             currentVideoRef.set(videoId);
             document.getElementById('url-video').value = "";
         }
