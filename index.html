@@ -4,101 +4,61 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Nuestro Cine Privado 🎬</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: #121212;
-            font-family: Arial, sans-serif;
-            color: white;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px 10px;
+            font-family: Arial, sans-serif; color: white;
+            display: flex; flex-direction: column; align-items: center;
+            min-height: 100vh; padding: 20px 10px;
         }
-        h1 {
-            font-size: 1.4rem;
-            margin: 0 0 15px 0;
-            color: #ff79c6;
-            text-shadow: 0px 2px 4px rgba(0,0,0,0.5);
-        }
-        .sala-cine {
-            width: 100%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+        h1 { font-size: 1.4rem; margin: 0 0 15px 0; color: #ff79c6; }
+        .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 15px; }
         .contenedor-video {
-            width: 100%;
-            aspect-ratio: 16 / 9; /* Proporción estándar de cine */
-            background: #000000;
-            border-radius: 12px;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.6);
-            overflow: hidden;
+            width: 100%; aspect-ratio: 16 / 9;
+            background: #000000; border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.6); overflow: hidden;
         }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+        iframe { width: 100%; height: 100%; border: none; }
+        
+        /* Botones del Panel de Control */
+        .controles-sala {
+            display: flex; gap: 10px; width: 100%; justify-content: center; margin-bottom: 5px;
         }
-        /* Contenedor Base del Chat */
+        .btn-control {
+            background: #282a36; color: #ff79c6; border: 2px solid #ff79c6;
+            padding: 8px 16px; border-radius: 20px; font-weight: bold; cursor: pointer;
+            font-size: 0.9rem; transition: 0.2s;
+        }
+        .btn-control:hover { background: #ff79c6; color: #121212; }
+
+        /* Estructura del Chat */
         .contenedor-chat {
-            width: 100%;
-            background: #1e1e1e;
-            border-radius: 12px;
-            display: flex;
-            flex-direction: column;
-            height: 300px; /* Tamaño cómodo para el celular */
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.4);
-            overflow: hidden;
+            width: 100%; background: #1e1e1e; border-radius: 12px;
+            display: flex; flex-direction: column; height: 300px;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.4); overflow: hidden;
         }
         .pantalla-mensajes {
-            flex: 1;
-            padding: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+            flex: 1; padding: 15px; overflow-y: auto;
+            display: flex; flex-direction: column; gap: 10px;
         }
-        .mensaje-demo {
-            background: #2a2a2a;
-            padding: 8px 12px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            max-width: 85%;
-            align-self: flex-start;
-            border-left: 4px solid #ff79c6;
+        .mensaje {
+            background: #2a2a2a; padding: 8px 12px; border-radius: 8px;
+            font-size: 0.9rem; max-width: 85%; align-self: flex-start;
+            word-break: break-word;
         }
-        .area-input {
-            display: flex;
-            padding: 10px;
-            background: #151515;
-            gap: 10px;
-        }
+        .msg-yo { align-self: flex-end; background: #ff79c6; color: #121212; }
+        .area-input { display: flex; padding: 10px; background: #151515; gap: 10px; }
         .area-input input {
-            flex: 1;
-            background: #2a2a2a;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            color: white;
-            outline: none;
-            font-size: 0.95rem;
+            flex: 1; background: #2a2a2a; border: none; padding: 12px;
+            border-radius: 8px; color: white; outline: none; font-size: 0.95rem;
         }
         .area-input button {
-            background: #ff79c6;
-            color: #121212;
-            border: none;
-            padding: 0 20px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 0.95rem;
+            background: #ff79c6; color: #121212; border: none; padding: 0 20px;
+            border-radius: 8px; font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
@@ -108,21 +68,104 @@
 
     <div class="sala-cine">
         <div class="contenedor-video">
-            <iframe src="https://drive.google.com/file/d/1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt/preview" allow="autoplay"></iframe>
+            <iframe id="pantalla-drive" src="https://drive.google.com/file/d/1yW9BlmA_G0xOZVq-SYkmn2AtX_qrgARt/preview" allow="autoplay"></iframe>
+        </div>
+
+        <div class="controles-sala">
+            <button class="btn-control" onclick="enviarComando('PLAY')">▶ Sincronizar Play</button>
+            <button class="btn-control" onclick="enviarComando('PAUSE')">⏸ Sincronizar Pausa</button>
         </div>
 
         <div class="contenedor-chat">
-            <div class="pantalla-mensajes" id="chat-box">
-                <div class="mensaje-demo">
-                    <strong>Sistema:</strong> ¡Bienvenidas al cine privado! Los mensajes aparecerán aquí abajo del video. ✨
-                </div>
-            </div>
+            <div class="pantalla-mensajes" id="chat-box"></div>
             <div class="area-input">
-                <input type="text" placeholder="Escribe un mensaje aquí..." disabled>
-                <button disabled>Enviar</button>
+                <input type="text" id="message-input" placeholder="Escribe un mensaje aquí...">
+                <button id="send-btn">Enviar</button>
             </div>
         </div>
     </div>
 
+    <script>
+        // Ventana para asignar el nombre al entrar
+        const miNombre = prompt("Introduce tu nombre para el cine:") || "Invitada";
+
+        // TUS CREDENCIALES REALES DE CINECITO INYECTADAS:
+        const firebaseConfig = {
+            apiKey: "AIzaSyB_en_iCNtBhIyDczHAka1oxUel6c7hvbo",
+            authDomain: "cinecito-c36b3.firebaseapp.com",
+            databaseURL: "https://cinecito-c36b3-default-rtdb.firebaseio.com",
+            projectId: "cinecito-c36b3",
+            storageBucket: "cinecito-c36b3.appspot.com",
+            messagingSenderId: "41821063218",
+            appId: "1:41821063218:web:a18b16f0ca4f003167142b"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const chatRef = database.ref('cine/chat');
+        const controlRef = database.ref('cine/control');
+
+        // LÓGICA DEL CHAT INTERACTIVO
+        document.getElementById('send-btn').addEventListener('click', enviarMensaje);
+        document.getElementById('message-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') enviarMensaje();
+        });
+
+        function enviarMensaje() {
+            const input = document.getElementById('message-input');
+            if (input.value.trim() !== "") {
+                chatRef.push({
+                    autor: miNombre,
+                    texto: input.value,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                });
+                input.value = "";
+            }
+        }
+
+        chatRef.limitToLast(40).on('child_added', (snapshot) => {
+            const msg = snapshot.val();
+            const chatBox = document.getElementById('chat-box');
+            const nuevoMensaje = document.createElement('div');
+            nuevoMensaje.classList.add('mensaje');
+            
+            if(msg.autor === miNombre) nuevoMensaje.classList.add('msg-yo');
+            nuevoMensaje.innerHTML = `<strong>${msg.autor}:</strong> ${msg.texto}`;
+            
+            chatBox.appendChild(nuevoMensaje);
+            chatBox.scrollTop = chatBox.scrollHeight; // Auto-scroll al último mensaje
+        });
+
+        // LÓGICA DEL CONTROL DE SINCRONÍA
+        function enviarComando(accion) {
+            controlRef.set({
+                comando: accion,
+                usuario: miNombre,
+                trigger: Date.now()
+            });
+        }
+
+        controlRef.on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+            
+            const chatBox = document.getElementById('chat-box');
+            const aviso = document.createElement('div');
+            aviso.style.color = '#ff79c6';
+            aviso.style.fontSize = '0.85rem';
+            aviso.style.textAlign = 'center';
+            aviso.style.margin = '5px 0';
+            
+            if (data.comando === 'PLAY') {
+                aviso.innerText = `📢 ${data.usuario} dio Play. ¡Dale Play a tu video!`;
+            } else if (data.comando === 'PAUSE') {
+                aviso.innerText = `📢 ${data.usuario} puso Pausa. Pausa tu video.`;
+            }
+            
+            chatBox.appendChild(aviso);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
 </body>
 </html>
