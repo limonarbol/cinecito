@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⋆˚꩜｡ sala de hanita 🌷</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🌷</text></svg>">
+    <title>Nuestro Cine Privado 🎬</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🎬</text></svg>">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
@@ -91,7 +91,7 @@
 </head>
 <body>
 
-    <h1>✨ <span>⋆˚꩜｡ hbd !</span></h1>
+    <h1>✨ <span>* ゚ ゜. hbd !</span></h1>
 
     <div class="sala-cine">
         <div class="contenedor-video">
@@ -134,6 +134,7 @@
         let player;
         let esBloqueoInmediato = false;
         let actualVideoId = 'S0Z8Z7-NszA'; 
+        let ultimoTriggerRecibido = 0;
 
         function onYouTubeIframeAPIReady() {
             currentVideoRef.on('value', (snapshot) => {
@@ -152,32 +153,34 @@
             });
         }
 
-        // CAPTURA DE EVENTOS DESDE TU LAP (HOST)
+        // LÓGICA DE EMISIÓN DE EVENTOS (Cualquiera de las dos puede mandar señales)
         function onPlayerStateChange(event) {
             if (esBloqueoInmediato) return;
 
-            if (miNombre.trim().toLowerCase() === 'caro') {
-                videoRef.set({
-                    estado: event.data,
-                    tiempo: player.getCurrentTime(),
-                    trigger: Date.now()
-                });
-            }
+            // Mandamos el cambio a Firebase incluyendo quién causó el evento
+            videoRef.set({
+                estado: event.data,
+                tiempo: player.getCurrentTime(),
+                trigger: Date.now(),
+                autor: miNombre
+            });
         }
 
-        // CORRECCIÓN: SINCRONIZACIÓN AUTOMÁTICA COMPLETA DE REPRODUCCIÓN/PAUSA
+        // LÓGICA DE RECEPCIÓN (Sincroniza a la otra persona)
         videoRef.on('value', (snapshot) => {
             const data = snapshot.val();
-            if (!data || !player || !player.getPlayerState || miNombre.trim().toLowerCase() === 'caro') return;
+            // Si el cambio lo causaste tú misma o es un evento viejo, ignorarlo
+            if (!data || !player || !player.getPlayerState || data.autor === miNombre || data.trigger <= ultimoTriggerRecibido) return;
 
+            ultimoTriggerRecibido = data.trigger;
             esBloqueoInmediato = true;
 
-            // Ajustar el tiempo si el desfase es de más de 1.5 segundos
+            // Si el tiempo está desfasado por más de 1.5 segundos, forzar sincronía
             if (Math.abs(player.getCurrentTime() - data.tiempo) > 1.5) {
                 player.seekTo(data.tiempo, true);
             }
 
-            // Sincronizar el estado exacto de Play o Pausa de forma forzada
+            // Sincronizar el estado del reproductor
             if (data.estado === YT.PlayerState.PLAYING && player.getPlayerState() !== YT.PlayerState.PLAYING) {
                 player.playVideo();
             } else if (data.estado === YT.PlayerState.PAUSED && player.getPlayerState() !== YT.PlayerState.PAUSED) {
@@ -204,7 +207,7 @@
             document.getElementById('url-video').value = "";
         }
 
-        // LÓGICA DEL CHAT
+        // CHAT
         document.getElementById('send-btn').addEventListener('click', enviarMensaje);
         document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensaje(); });
 
