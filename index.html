@@ -6,6 +6,7 @@
     <title>𓍢ִ໋🌷͙֒ sala de hanita</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🌷</text></svg>">
     
+    <!-- Librerías de Firebase v8 -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
@@ -41,21 +42,29 @@
         #video-directo-html5 { background: #000; }
         
         .panel-cambiar-video {
-            display: flex; gap: 10px; width: 100%; background: rgba(255, 255, 255, 0.75);
+            display: flex; flex-direction: column; gap: 10px; width: 100%; background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            padding: 10px; border-radius: 18px; box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
+            padding: 12px; border-radius: 18px; box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
             border: 1px solid rgba(255, 255, 255, 0.5);
         }
-        .panel-cambiar-video input {
+        .fila-input { display: flex; gap: 10px; width: 100%; }
+        .panel-cambiar-video input[type="text"] {
             flex: 1; background: #ffffff; border: 1px solid #fbcfe8; padding: 12px;
             border-radius: 12px; color: #786460; outline: none; font-size: 0.9rem;
         }
         .panel-cambiar-video button {
             background: #786460; color: #ffffff; border: none; padding: 0 20px;
             border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
-            transition: opacity 0.2s;
+            transition: opacity 0.2s; height: 43px;
         }
         .panel-cambiar-video button:hover { opacity: 0.9; }
+
+        .zona-upload {
+            display: flex; align-items: center; justify-content: space-between;
+            background: rgba(255, 255, 255, 0.5); padding: 8px 12px; border-radius: 12px;
+            font-size: 0.85rem; gap: 10px; border: 1px dashed #fbcfe8;
+        }
+        .btn-borrar { background: #e11d48 !important; height: 30px !important; padding: 0 10px !important; font-size: 0.8rem !important; }
 
         .contenedor-chat {
             width: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
@@ -70,7 +79,6 @@
             font-size: 0.9rem; max-width: 80%; align-self: flex-start; word-break: break-word;
             box-shadow: 0px 2px 5px rgba(0,0,0,0.02); color: #786460; border: 1px solid rgba(255,255,255,0.8);
         }
-        
         .msg-yo { 
             align-self: flex-end; background: #fbcfe8; color: #786460;
             border-radius: 16px 16px 6px 16px; border: 1px solid #f472b6;
@@ -93,7 +101,7 @@
 </head>
 <body>
 
-    <h1> <span>* ゚ ゜. te adoro hanita hermosa !</span></h1>
+    <h1> <span>* ゚ ゜. te quiero !</span></h1>
 
     <div class="sala-cine">
         <div class="contenedor-video">
@@ -102,8 +110,19 @@
         </div>
 
         <div class="panel-cambiar-video">
-            <input type="text" id="url-video" placeholder="Pega aquí el link de YouTube o .mp4...">
-            <button id="btn-cambiar-video">Cambiar video</button>
+            <div class="fila-input">
+                <input type="text" id="url-video" placeholder="Pega un link de YouTube o usa la opción de abajo...">
+                <button id="btn-cambiar-video">Cambiar video</button>
+            </div>
+            
+            <div class="zona-upload">
+                <div>
+                    <label style="cursor:pointer; font-weight:bold;">📁 Subir video pesado (.mp4): </label>
+                    <input type="file" id="file-uploader" accept="video/mp4,video/webm">
+                    <span id="upload-status" style="margin-left: 10px; color: #db2777; font-weight: bold;"></span>
+                </div>
+                <button id="btn-borrar-video" class="btn-borrar" style="display:none;">🗑️ Quitar video streaming</button>
+            </div>
         </div>
 
         <div class="contenedor-chat">
@@ -130,6 +149,7 @@
 
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
+        
         const chatRef = database.ref('cine/chat');
         const videoRef = database.ref('cine/videoState');
         const videoConfigRef = database.ref('cine/videoConfig');
@@ -138,19 +158,19 @@
         let esBloqueoInmediato = false;
         let ultimoTriggerRecibido = 0;
         const reproductorDirecto = document.getElementById('video-directo-html5');
+        const btnBorrar = document.getElementById('btn-borrar-video');
 
         function onYouTubeIframeAPIReady() {
             videoConfigRef.on('value', (snapshot) => {
                 const config = snapshot.val();
-                
-                // Si la base de datos está vacía al iniciar, ponemos el video de respaldo
                 let videoId = config ? config.id : 'S0Z8Z7-NszA';
                 let tipoVideo = config ? config.tipo : 'youtube';
 
                 const contenedorYoutube = document.getElementById('player');
 
+                // Mostrar el botón de quitar video si se está usando un stream nativo
                 if (tipoVideo === 'directo') {
-                    // Ocultamos YouTube, mostramos e inicializamos el reproductor MP4
+                    btnBorrar.style.display = 'block';
                     contenedorYoutube.style.display = 'none';
                     if (player && typeof player.stopVideo === 'function') player.stopVideo();
                     
@@ -160,7 +180,7 @@
                         reproductorDirecto.load();
                     }
                 } else {
-                    // Mostramos YouTube, apagamos e inicializamos el reproductor MP4
+                    btnBorrar.style.display = 'none';
                     reproductorDirecto.style.display = 'none';
                     reproductorDirecto.pause();
                     contenedorYoutube.style.display = 'block';
@@ -178,7 +198,6 @@
             });
         }
 
-        // CONTROL EMISOR PARA YOUTUBE
         function onPlayerStateChange(event) {
             if (esBloqueoInmediato) return;
             videoRef.set({
@@ -189,7 +208,6 @@
             });
         }
 
-        // CONTROL EMISOR PARA VIDEO DIRECTO (.mp4)
         reproductorDirecto.onplay = () => enviarEstadoDirecto(1);
         reproductorDirecto.onpause = () => enviarEstadoDirecto(2);
         reproductorDirecto.onseeked = () => enviarEstadoDirecto(3);
@@ -210,7 +228,6 @@
             });
         }
 
-        // LÓGICA DE RECEPCIÓN GLOBAL (Sincroniza a la otra persona)
         videoRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data || data.autor === miNombre || data.trigger <= ultimoTriggerRecibido) return;
@@ -218,7 +235,6 @@
             ultimoTriggerRecibido = data.trigger;
             esBloqueoInmediato = true;
 
-            // SINCRONIZACIÓN PARA VIDEO DIRECTO
             if (reproductorDirecto.style.display === 'block') {
                 if (Math.abs(reproductorDirecto.currentTime - data.tiempo) > 1.5) {
                     reproductorDirecto.currentTime = data.tiempo;
@@ -228,9 +244,7 @@
                 } else if (data.estado === YT.PlayerState.PAUSED && !reproductorDirecto.paused) {
                     reproductorDirecto.pause();
                 }
-            } 
-            // SINCRONIZACIÓN PARA YOUTUBE
-            else if (player && player.getPlayerState) {
+            } else if (player && player.getPlayerState) {
                 if (Math.abs(player.getCurrentTime() - data.tiempo) > 1.5) {
                     player.seekTo(data.tiempo, true);
                 }
@@ -247,47 +261,70 @@
         document.getElementById('btn-cambiar-video').addEventListener('click', cambiarVideoGlobal);
         
         function cambiarVideoGlobal() {
-    const urlInput = document.getElementById('url-video').value.trim();
-    if (!urlInput) return;
+            const urlInput = document.getElementById('url-video').value.trim();
+            if (!urlInput) return;
 
-    let videoId = urlInput;
-    let tipoVideo = 'youtube';
+            let videoId = urlInput;
+            let tipoVideo = 'youtube';
 
-// 1. DETECCIÓN Y CONVERSIÓN AUTOMÁTICA DE GOOGLE DRIVE (A PRUEBA DE VIDEOS PESADOS)
-    if (urlInput.includes('drive.google.com')) {
-        tipoVideo = 'directo';
-        const matchDrive = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        if (matchDrive && matchDrive[1]) {
-            // Añadimos el truco de confirmación para que no se trabe con el aviso de virus de archivos grandes
-            videoId = `https://drive.google.com/uc?id=${matchDrive[1]}&export=download&confirm=no_antivirus`;
-        } else {
-            alert("¡Ups! No pudimos procesar el link de Drive.");
-            return;
+            if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
+                tipoVideo = 'youtube';
+                if (urlInput.includes('/shorts/')) {
+                    videoId = urlInput.split('/shorts/')[1].split(/[?#&]/)[0];
+                } else {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                    const match = urlInput.match(regExp);
+                    if (match && match[2].length === 11) videoId = match[2];
+                }
+            } else {
+                tipoVideo = 'directo';
+            }
+
+            videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
+            videoConfigRef.set({ id: videoId, tipo: tipoVideo });
+            document.getElementById('url-video').value = "";
         }
-    }
-    // 2. DETECCIÓN DE OTROS ARCHIVOS DIRECTOS (.mp4, .webm, catbox, etc.)
-    else if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox')) {
-        tipoVideo = 'directo';
-        videoId = urlInput;
-    } 
-    // 3. DETECCIÓN Y LIMPIEZA DE YOUTUBE (INCLUYENDO SHORTS)
-    else if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
-        tipoVideo = 'youtube';
-        if (urlInput.includes('/shorts/')) {
-            videoId = urlInput.split('/shorts/')[1].split(/[?#&]/)[0];
-        } else {
-            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-            const match = urlInput.match(regExp);
-            if (match && match[2].length === 11) videoId = match[2];
-        }
-    }
 
-    // Reseteamos el estado de reproducción y guardamos la configuración limpia
-    videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
-    videoConfigRef.set({ id: videoId, tipo: tipoVideo });
-    
-    document.getElementById('url-video').value = "";
-}
+        // CONTROL DE CARGA ANÓNIMA Y DIRECTA MEDIANTE PIXELDRAIN
+        document.getElementById('file-uploader').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const status = document.getElementById('upload-status');
+            status.innerText = "Subiendo video pesado... 🚀";
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('anonymous', 'true');
+
+            fetch('https://pixeldrain.com/api/file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    status.innerText = "¡Subido con éxito! 🎉";
+                    const urlDirecta = `https://pixeldrain.com/api/file/${data.id}`;
+                    
+                    videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
+                    videoConfigRef.set({ id: urlDirecta, tipo: 'directo' });
+                } else {
+                    status.innerText = "❌ Error en el servidor de streaming.";
+                }
+            })
+            .catch(error => {
+                status.innerText = "❌ Error al conectar con el servidor.";
+                console.error(error);
+            });
+        });
+
+        // BOTÓN PARA LIMPIAR LA PANTALLA Y VOLVER A YOUTUBE
+        btnBorrar.addEventListener('click', () => {
+            document.getElementById('upload-status').innerText = "";
+            document.getElementById('file-uploader').value = "";
+            videoConfigRef.set({ id: 'S0Z8Z7-NszA', tipo: 'youtube' });
+        });
 
         // CHAT
         document.getElementById('send-btn').addEventListener('click', enviarMensaje);
