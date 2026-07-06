@@ -253,18 +253,18 @@
     let videoId = urlInput;
     let tipoVideo = 'youtube';
 
-    // 1. DETECCIÓN Y CONVERSIÓN AUTOMÁTICA DE GOOGLE DRIVE
+// 1. DETECCIÓN Y CONVERSIÓN AUTOMÁTICA DE GOOGLE DRIVE (A PRUEBA DE VIDEOS PESADOS)
     if (urlInput.includes('drive.google.com')) {
         tipoVideo = 'directo';
-        // Buscamos el ID largo que viene entre /d/ y /view
         const matchDrive = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
         if (matchDrive && matchDrive[1]) {
-            videoId = `https://docs.google.com/uc?export=download&id=${matchDrive[1]}`;
+            // Añadimos el truco de confirmación para que no se trabe con el aviso de virus de archivos grandes
+            videoId = `https://drive.google.com/uc?id=${matchDrive[1]}&export=download&confirm=no_antivirus`;
         } else {
             alert("¡Ups! No pudimos procesar el link de Drive.");
             return;
         }
-    } 
+    }
     // 2. DETECCIÓN DE OTROS ARCHIVOS DIRECTOS (.mp4, .webm, catbox, etc.)
     else if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox')) {
         tipoVideo = 'directo';
