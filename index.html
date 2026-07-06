@@ -247,35 +247,47 @@
         document.getElementById('btn-cambiar-video').addEventListener('click', cambiarVideoGlobal);
         
         function cambiarVideoGlobal() {
-            const urlInput = document.getElementById('url-video').value.trim();
-            if (!urlInput) return;
+    const urlInput = document.getElementById('url-video').value.trim();
+    if (!urlInput) return;
 
-            let videoId = urlInput;
-            let tipoVideo = 'youtube';
+    let videoId = urlInput;
+    let tipoVideo = 'youtube';
 
-            // Detección inteligente de archivos mp4 directos
-            if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox')) {
-                tipoVideo = 'directo';
-                videoId = urlInput;
-            } 
-            // Detección y limpieza inteligente de links y shorts de YouTube
-            else if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
-                tipoVideo = 'youtube';
-                if (urlInput.includes('/shorts/')) {
-                    videoId = urlInput.split('/shorts/')[1].split(/[?#&]/)[0];
-                } else {
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                    const match = urlInput.match(regExp);
-                    if (match && match[2].length === 11) videoId = match[2];
-                }
-            }
-
-            // Reseteamos el estado de reproducción y guardamos la configuración limpia
-            videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
-            videoConfigRef.set({ id: videoId, tipo: tipoVideo });
-            
-            document.getElementById('url-video').value = "";
+    // 1. DETECCIÓN Y CONVERSIÓN AUTOMÁTICA DE GOOGLE DRIVE
+    if (urlInput.includes('drive.google.com')) {
+        tipoVideo = 'directo';
+        // Buscamos el ID largo que viene entre /d/ y /view
+        const matchDrive = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
+        if (matchDrive && matchDrive[1]) {
+            videoId = `https://docs.google.com/uc?export=download&id=${matchDrive[1]}`;
+        } else {
+            alert("¡Ups! No pudimos procesar el link de Drive.");
+            return;
         }
+    } 
+    // 2. DETECCIÓN DE OTROS ARCHIVOS DIRECTOS (.mp4, .webm, catbox, etc.)
+    else if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox')) {
+        tipoVideo = 'directo';
+        videoId = urlInput;
+    } 
+    // 3. DETECCIÓN Y LIMPIEZA DE YOUTUBE (INCLUYENDO SHORTS)
+    else if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
+        tipoVideo = 'youtube';
+        if (urlInput.includes('/shorts/')) {
+            videoId = urlInput.split('/shorts/')[1].split(/[?#&]/)[0];
+        } else {
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = urlInput.match(regExp);
+            if (match && match[2].length === 11) videoId = match[2];
+        }
+    }
+
+    // Reseteamos el estado de reproducción y guardamos la configuración limpia
+    videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
+    videoConfigRef.set({ id: videoId, tipo: tipoVideo });
+    
+    document.getElementById('url-video').value = "";
+}
 
         // CHAT
         document.getElementById('send-btn').addEventListener('click', enviarMensaje);
