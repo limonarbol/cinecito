@@ -1,359 +1,480 @@
 <!DOCTYPE html>
+
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>𓍢ִ໋🌷͙֒ sala de hanita</title>
+
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🌷</text></svg>">
-    
-    <!-- Librerías de Firebase v8 -->
+
+   
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
     <script src="https://www.youtube.com/iframe_api"></script>
-    
+
+   
+
     <style>
+
         * { box-sizing: border-box; }
+
         body {
+
             margin: 0; padding: 0;
+
             background: url('fondo.jpg') no-repeat center center fixed;
+
             background-size: cover;
-            background-color: #fbcfe8; 
+
+            background-color: #fbcfe8;
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
             color: #786460;
+
             display: flex; flex-direction: column; align-items: center;
+
             min-height: 100vh; padding: 20px 10px;
+
         }
-        
-        h1 { 
+
+       
+
+        h1 {
+
             font-size: 1.4rem; margin: 0 0 15px 0; color: #786460; font-weight: 600;
+
             background: rgba(255, 255, 255, 0.7); padding: 8px 24px; border-radius: 20px;
+
             backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+
             box-shadow: 0px 4px 10px rgba(120, 100, 96, 0.05);
+
         }
-        
+
+       
+
         .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 12px; }
-        
+
+       
+
         .contenedor-video {
+
             width: 100%; aspect-ratio: 16 / 9; background: #000000; border-radius: 24px;
+
             box-shadow: 0px 8px 25px rgba(120, 100, 96, 0.15); overflow: hidden;
-            position: relative;
+
         }
-        #player, #video-directo-html5 { width: 100%; height: 100%; border: none; display: block; }
-        #video-directo-html5 { background: #000; }
-        
+
+        #player { width: 100%; height: 100%; border: none; }
+
+       
+
         .panel-cambiar-video {
-            display: flex; flex-direction: column; gap: 10px; width: 100%; background: rgba(255, 255, 255, 0.75);
+
+            display: flex; gap: 10px; width: 100%; background: rgba(255, 255, 255, 0.75);
+
             backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            padding: 12px; border-radius: 18px; box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
+
+            padding: 10px; border-radius: 18px; box-shadow: 0px 4px 15px rgba(0,0,0,0.03);
+
             border: 1px solid rgba(255, 255, 255, 0.5);
+
         }
-        .fila-input { display: flex; gap: 10px; width: 100%; }
-        .panel-cambiar-video input[type="text"] {
+
+        .panel-cambiar-video input {
+
             flex: 1; background: #ffffff; border: 1px solid #fbcfe8; padding: 12px;
+
             border-radius: 12px; color: #786460; outline: none; font-size: 0.9rem;
+
         }
+
         .panel-cambiar-video button {
+
             background: #786460; color: #ffffff; border: none; padding: 0 20px;
+
             border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
-            transition: opacity 0.2s; height: 43px;
+
+            transition: opacity 0.2s;
+
         }
+
         .panel-cambiar-video button:hover { opacity: 0.9; }
 
-        .zona-upload {
-            display: flex; align-items: center; justify-content: space-between;
-            background: rgba(255, 255, 255, 0.5); padding: 8px 12px; border-radius: 12px;
-            font-size: 0.85rem; gap: 10px; border: 1px dashed #fbcfe8;
-        }
-        .btn-borrar { background: #e11d48 !important; height: 30px !important; padding: 0 10px !important; font-size: 0.8rem !important; }
+
 
         .contenedor-chat {
+
             width: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+
             -webkit-backdrop-filter: blur(10px); border-radius: 24px; display: flex;
-            flex-direction: column; height: 280px; box-shadow: 0px 8px 20px rgba(0,0,0,0.03); 
+
+            flex-direction: column; height: 280px; box-shadow: 0px 8px 20px rgba(0,0,0,0.03);
+
             overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.5);
+
         }
+
         .pantalla-mensajes { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
-        
+
+       
+
         .mensaje {
+
             background: #ffffff; padding: 10px 14px; border-radius: 16px 16px 16px 6px;
+
             font-size: 0.9rem; max-width: 80%; align-self: flex-start; word-break: break-word;
+
             box-shadow: 0px 2px 5px rgba(0,0,0,0.02); color: #786460; border: 1px solid rgba(255,255,255,0.8);
+
         }
-        .msg-yo { 
+
+       
+
+        .msg-yo {
+
             align-self: flex-end; background: #fbcfe8; color: #786460;
+
             border-radius: 16px 16px 6px 16px; border: 1px solid #f472b6;
+
         }
-        
-        .area-input { 
+
+       
+
+        .area-input {
+
             display: flex; padding: 12px; background: rgba(255, 255, 255, 0.4); gap: 10px;
+
             border-top: 1px solid rgba(255, 255, 255, 0.3);
+
         }
+
         .area-input input {
+
             flex: 1; background: #ffffff; border: 1px solid #fbcfe8; padding: 12px;
+
             border-radius: 12px; color: #786460; outline: none; font-size: 0.95rem;
+
         }
+
         .area-input button {
+
             background: #786460; color: #ffffff; border: none; padding: 0 22px;
+
             border-radius: 12px; font-weight: bold; cursor: pointer; transition: opacity 0.2s;
+
         }
+
         .area-input button:hover { opacity: 0.9; }
+
     </style>
+
 </head>
+
 <body>
+
+
 
     <h1> <span>* ゚ ゜. te quiero !</span></h1>
 
+
+
     <div class="sala-cine">
+
         <div class="contenedor-video">
+
             <div id="player"></div>
-            <video id="video-directo-html5" controls style="display: none;"></video>
+
         </div>
+
+
 
         <div class="panel-cambiar-video">
-            <div class="fila-input">
-                <input type="text" id="url-video" placeholder="Pega un link de YouTube o usa la opción de abajo...">
-                <button id="btn-cambiar-video">Cambiar video</button>
-            </div>
-            
-            <div class="zona-upload">
-                <div>
-                    <label style="cursor:pointer; font-weight:bold;">📁 Subir video pesado (.mp4): </label>
-                    <input type="file" id="file-uploader" accept="video/mp4,video/webm">
-                    <span id="upload-status" style="margin-left: 10px; color: #db2777; font-weight: bold;"></span>
-                </div>
-                <button id="btn-borrar-video" class="btn-borrar" style="display:none;">🗑️ Quitar video streaming</button>
-            </div>
+
+            <input type="text" id="url-video" placeholder="Pega aquí el link de YouTube...">
+
+            <button id="btn-cambiar-video">Cambiar video</button>
+
         </div>
+
+
 
         <div class="contenedor-chat">
+
             <div class="pantalla-mensajes" id="chat-box"></div>
+
             <div class="area-input">
+
                 <input type="text" id="message-input" placeholder="Escribe un mensaje aquí...">
+
                 <button id="send-btn">Enviar</button>
+
             </div>
+
         </div>
+
     </div>
 
+
+
     <script>
+
         const miNombre = prompt("Introduce tu nombre para el cine:") || "Invitada";
 
+
+
         const firebaseConfig = {
+
             apiKey: "AIzaSyB_en_iCNtBhIyDczHAka1oxUel6c7hvbo",
+
             authDomain: "cinecito-c36b3.firebaseapp.com",
+
             databaseURL: "https://cinecito-c36b3-default-rtdb.firebaseio.com",
+
             projectId: "cinecito-c36b3",
+
             storageBucket: "cinecito-c36b3.appspot.com",
+
             messagingSenderId: "41821063218",
+
             appId: "1:41821063218:web:a18b16f0ca4f003167142b"
+
         };
 
+
+
         firebase.initializeApp(firebaseConfig);
+
         const database = firebase.database();
-        
+
         const chatRef = database.ref('cine/chat');
+
         const videoRef = database.ref('cine/videoState');
-        const videoConfigRef = database.ref('cine/videoConfig');
+
+        const currentVideoRef = database.ref('cine/currentVideoId');
+
+
 
         let player;
+
         let esBloqueoInmediato = false;
+
+        let actualVideoId = 'S0Z8Z7-NszA';
+
         let ultimoTriggerRecibido = 0;
-        const reproductorDirecto = document.getElementById('video-directo-html5');
-        const btnBorrar = document.getElementById('btn-borrar-video');
+
+
 
         function onYouTubeIframeAPIReady() {
-            videoConfigRef.on('value', (snapshot) => {
-                const config = snapshot.val();
-                let videoId = config ? config.id : 'S0Z8Z7-NszA';
-                let tipoVideo = config ? config.tipo : 'youtube';
 
-                const contenedorYoutube = document.getElementById('player');
+            currentVideoRef.on('value', (snapshot) => {
 
-                // Mostrar el botón de quitar video si se está usando un stream nativo
-                if (tipoVideo === 'directo') {
-                    btnBorrar.style.display = 'block';
-                    contenedorYoutube.style.display = 'none';
-                    if (player && typeof player.stopVideo === 'function') player.stopVideo();
-                    
-                    reproductorDirecto.style.display = 'block';
-                    if (reproductorDirecto.src !== videoId) {
-                        reproductorDirecto.src = videoId;
-                        reproductorDirecto.load();
-                    }
+                const idFromDb = snapshot.val();
+
+                if (idFromDb) actualVideoId = idFromDb;
+
+               
+
+                if (!player) {
+
+                    player = new YT.Player('player', {
+
+                        videoId: actualVideoId,
+
+                        playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
+
+                        events: { 'onStateChange': onPlayerStateChange }
+
+                    });
+
                 } else {
-                    btnBorrar.style.display = 'none';
-                    reproductorDirecto.style.display = 'none';
-                    reproductorDirecto.pause();
-                    contenedorYoutube.style.display = 'block';
 
-                    if (!player) {
-                        player = new YT.Player('player', {
-                            videoId: videoId,
-                            playerVars: { 'playsinline': 1, 'controls': 1, 'rel': 0 },
-                            events: { 'onStateChange': onPlayerStateChange }
-                        });
-                    } else {
-                        player.cueVideoById(videoId);
-                    }
+                    player.cueVideoById(actualVideoId);
+
                 }
+
             });
+
         }
+
+
+
+        // LÓGICA DE EMISIÓN DE EVENTOS (Cualquiera de las dos puede mandar señales)
 
         function onPlayerStateChange(event) {
+
             if (esBloqueoInmediato) return;
+
+
+
+            // Mandamos el cambio a Firebase incluyendo quién causó el evento
+
             videoRef.set({
+
                 estado: event.data,
+
                 tiempo: player.getCurrentTime(),
+
                 trigger: Date.now(),
+
                 autor: miNombre
+
             });
+
         }
 
-        reproductorDirecto.onplay = () => enviarEstadoDirecto(1);
-        reproductorDirecto.onpause = () => enviarEstadoDirecto(2);
-        reproductorDirecto.onseeked = () => enviarEstadoDirecto(3);
 
-        function enviarEstadoDirecto(accion) {
-            if (reproductorDirecto.style.display === 'none' || esBloqueoInmediato) return;
-            
-            let estadoMapeado = accion;
-            if (accion === 1) estadoMapeado = YT.PlayerState.PLAYING;
-            if (accion === 2) estadoMapeado = YT.PlayerState.PAUSED;
-            if (accion === 3) estadoMapeado = reproductorDirecto.paused ? YT.PlayerState.PAUSED : YT.PlayerState.PLAYING;
 
-            videoRef.set({
-                estado: estadoMapeado,
-                tiempo: reproductorDirecto.currentTime,
-                trigger: Date.now(),
-                autor: miNombre
-            });
-        }
+        // LÓGICA DE RECEPCIÓN (Sincroniza a la otra persona)
 
         videoRef.on('value', (snapshot) => {
+
             const data = snapshot.val();
-            if (!data || data.autor === miNombre || data.trigger <= ultimoTriggerRecibido) return;
+
+            // Si el cambio lo causaste tú misma o es un evento viejo, ignorarlo
+
+            if (!data || !player || !player.getPlayerState || data.autor === miNombre || data.trigger <= ultimoTriggerRecibido) return;
+
+
 
             ultimoTriggerRecibido = data.trigger;
+
             esBloqueoInmediato = true;
 
-            if (reproductorDirecto.style.display === 'block') {
-                if (Math.abs(reproductorDirecto.currentTime - data.tiempo) > 1.5) {
-                    reproductorDirecto.currentTime = data.tiempo;
-                }
-                if (data.estado === YT.PlayerState.PLAYING && reproductorDirecto.paused) {
-                    reproductorDirecto.play();
-                } else if (data.estado === YT.PlayerState.PAUSED && !reproductorDirecto.paused) {
-                    reproductorDirecto.pause();
-                }
-            } else if (player && player.getPlayerState) {
-                if (Math.abs(player.getCurrentTime() - data.tiempo) > 1.5) {
-                    player.seekTo(data.tiempo, true);
-                }
-                if (data.estado === YT.PlayerState.PLAYING && player.getPlayerState() !== YT.PlayerState.PLAYING) {
-                    player.playVideo();
-                } else if (data.estado === YT.PlayerState.PAUSED && player.getPlayerState() !== YT.PlayerState.PAUSED) {
-                    player.pauseVideo();
-                }
+
+
+            // Si el tiempo está desfasado por más de 1.5 segundos, forzar sincronía
+
+            if (Math.abs(player.getCurrentTime() - data.tiempo) > 1.5) {
+
+                player.seekTo(data.tiempo, true);
+
             }
+
+
+
+            // Sincronizar el estado del reproductor
+
+            if (data.estado === YT.PlayerState.PLAYING && player.getPlayerState() !== YT.PlayerState.PLAYING) {
+
+                player.playVideo();
+
+            } else if (data.estado === YT.PlayerState.PAUSED && player.getPlayerState() !== YT.PlayerState.PAUSED) {
+
+                player.pauseVideo();
+
+            }
+
+
 
             setTimeout(() => { esBloqueoInmediato = false; }, 600);
+
         });
+
+
 
         document.getElementById('btn-cambiar-video').addEventListener('click', cambiarVideoGlobal);
-        
+
+       
+
         function cambiarVideoGlobal() {
+
             const urlInput = document.getElementById('url-video').value.trim();
+
             if (!urlInput) return;
 
+
+
             let videoId = urlInput;
-            let tipoVideo = 'youtube';
 
             if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
-                tipoVideo = 'youtube';
-                if (urlInput.includes('/shorts/')) {
-                    videoId = urlInput.split('/shorts/')[1].split(/[?#&]/)[0];
-                } else {
-                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-                    const match = urlInput.match(regExp);
-                    if (match && match[2].length === 11) videoId = match[2];
-                }
-            } else {
-                tipoVideo = 'directo';
+
+                const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+
+                const match = urlInput.match(regExp);
+
+                if (match && match[2].length === 11) videoId = match[2];
+
             }
 
-            videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
-            videoConfigRef.set({ id: videoId, tipo: tipoVideo });
+
+
+            currentVideoRef.set(videoId);
+
             document.getElementById('url-video').value = "";
+
         }
 
-        // CONTROL DE CARGA ANÓNIMA Y DIRECTA MEDIANTE PIXELDRAIN
-        document.getElementById('file-uploader').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
 
-            const status = document.getElementById('upload-status');
-            status.innerText = "Subiendo video pesado... 🚀";
-
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('anonymous', 'true');
-
-            fetch('https://pixeldrain.com/api/file', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    status.innerText = "¡Subido con éxito! 🎉";
-                    const urlDirecta = `https://pixeldrain.com/api/file/${data.id}`;
-                    
-                    videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
-                    videoConfigRef.set({ id: urlDirecta, tipo: 'directo' });
-                } else {
-                    status.innerText = "❌ Error en el servidor de streaming.";
-                }
-            })
-            .catch(error => {
-                status.innerText = "❌ Error al conectar con el servidor.";
-                console.error(error);
-            });
-        });
-
-        // BOTÓN PARA LIMPIAR LA PANTALLA Y VOLVER A YOUTUBE
-        btnBorrar.addEventListener('click', () => {
-            document.getElementById('upload-status').innerText = "";
-            document.getElementById('file-uploader').value = "";
-            videoConfigRef.set({ id: 'S0Z8Z7-NszA', tipo: 'youtube' });
-        });
 
         // CHAT
+
         document.getElementById('send-btn').addEventListener('click', enviarMensaje);
+
         document.getElementById('message-input').addEventListener('keypress', (e) => { if (e.key === 'Enter') enviarMensaje(); });
 
+
+
         function enviarMensaje() {
+
             const input = document.getElementById('message-input');
+
             if (input.value.trim() !== "") {
+
                 chatRef.push({
+
                     autor: miNombre,
+
                     texto: input.value,
+
                     timestamp: firebase.database.ServerValue.TIMESTAMP
+
                 });
+
                 input.value = "";
+
             }
+
         }
 
+
+
         chatRef.limitToLast(40).on('child_added', (snapshot) => {
+
             const msg = snapshot.val();
+
             const chatBox = document.getElementById('chat-box');
+
             const nuevoMensaje = document.createElement('div');
+
             nuevoMensaje.classList.add('mensaje');
-            
+
+           
+
             if(msg.autor === miNombre) nuevoMensaje.classList.add('msg-yo');
+
             nuevoMensaje.innerHTML = `<strong>${msg.autor}:</strong> ${msg.texto}`;
-            
+
+           
+
             chatBox.appendChild(nuevoMensaje);
+
             chatBox.scrollTop = chatBox.scrollHeight;
+
         });
+
     </script>
+
 </body>
+
 </html>
+
