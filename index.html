@@ -93,7 +93,7 @@
 </head>
 <body>
 
-    <h1> <span>* ゚ ゜. te quiero !</span></h1>
+    <h1> <span>* ゚ ゜. te adoro !</span></h1>
 
     <div class="sala-cine">
         <div class="contenedor-video">
@@ -102,7 +102,7 @@
         </div>
 
         <div class="panel-cambiar-video">
-            <input type="text" id="url-video" placeholder="Pega aquí el link de YouTube o .mp4...">
+            <input type="text" id="url-video" placeholder="Pega aquí el link de YouTube, Archive.org o .mp4...">
             <button id="btn-cambiar-video">Cambiar video</button>
         </div>
 
@@ -143,14 +143,12 @@
             videoConfigRef.on('value', (snapshot) => {
                 const config = snapshot.val();
                 
-                // Si la base de datos está vacía al iniciar, ponemos el video de respaldo
                 let videoId = config ? config.id : 'S0Z8Z7-NszA';
                 let tipoVideo = config ? config.tipo : 'youtube';
 
                 const contenedorYoutube = document.getElementById('player');
 
                 if (tipoVideo === 'directo') {
-                    // Ocultamos YouTube, mostramos e inicializamos el reproductor MP4
                     contenedorYoutube.style.display = 'none';
                     if (player && typeof player.stopVideo === 'function') player.stopVideo();
                     
@@ -160,7 +158,6 @@
                         reproductorDirecto.load();
                     }
                 } else {
-                    // Mostramos YouTube, apagamos e inicializamos el reproductor MP4
                     reproductorDirecto.style.display = 'none';
                     reproductorDirecto.pause();
                     contenedorYoutube.style.display = 'block';
@@ -178,7 +175,6 @@
             });
         }
 
-        // CONTROL EMISOR PARA YOUTUBE
         function onPlayerStateChange(event) {
             if (esBloqueoInmediato) return;
             videoRef.set({
@@ -189,7 +185,6 @@
             });
         }
 
-        // CONTROL EMISOR PARA VIDEO DIRECTO (.mp4)
         reproductorDirecto.onplay = () => enviarEstadoDirecto(1);
         reproductorDirecto.onpause = () => enviarEstadoDirecto(2);
         reproductorDirecto.onseeked = () => enviarEstadoDirecto(3);
@@ -210,7 +205,6 @@
             });
         }
 
-        // LÓGICA DE RECEPCIÓN GLOBAL (Sincroniza a la otra persona)
         videoRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data || data.autor === miNombre || data.trigger <= ultimoTriggerRecibido) return;
@@ -218,7 +212,6 @@
             ultimoTriggerRecibido = data.trigger;
             esBloqueoInmediato = true;
 
-            // SINCRONIZACIÓN PARA VIDEO DIRECTO
             if (reproductorDirecto.style.display === 'block') {
                 if (Math.abs(reproductorDirecto.currentTime - data.tiempo) > 1.5) {
                     reproductorDirecto.currentTime = data.tiempo;
@@ -229,7 +222,6 @@
                     reproductorDirecto.pause();
                 }
             } 
-            // SINCRONIZACIÓN PARA YOUTUBE
             else if (player && player.getPlayerState) {
                 if (Math.abs(player.getCurrentTime() - data.tiempo) > 1.5) {
                     player.seekTo(data.tiempo, true);
@@ -253,12 +245,32 @@
             let videoId = urlInput;
             let tipoVideo = 'youtube';
 
-            // Detección inteligente de archivos mp4 directos
-            if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox')) {
+            // 1. MEJORA: DETECCIÓN AUTOMÁTICA DE ENLACES DE GOOGLE DRIVE
+            if (urlInput.includes('drive.google.com')) {
                 tipoVideo = 'directo';
-                videoId = urlInput;
+                const matchDrive = urlInput.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (matchDrive && matchDrive[1]) {
+                    videoId = `https://drive.google.com/uc?id=${matchDrive[1]}&export=download&confirm=no_antivirus`;
+                } else {
+                    alert("¡Ups! No pudimos procesar el link de Drive.");
+                    return;
+                }
+            }
+            // 2. MEJORA: DETECCIÓN DE ARCHIVOS DIRECTOS MP4, ARCHIVE.ORG Y PIXELDRAIN
+            else if (urlInput.match(/\.(mp4|webm|ogg)($|\?)/i) || urlInput.includes('filebin') || urlInput.includes('catbox') || urlInput.includes('archive.org') || urlInput.includes('pixeldrain.com')) {
+                tipoVideo = 'directo';
+                
+                // Si es un enlace normal de visualización en Pixeldrain, limpiamos el ID
+                if (urlInput.includes('pixeldrain.com') && !urlInput.includes('/api/file/')) {
+                    const matchPixel = urlInput.match(/\/u\/([a-zA-Z0-9]+)/) || urlInput.match(/\/file\/([a-zA-Z0-9]+)/);
+                    if (matchPixel && matchPixel[1]) {
+                        videoId = `https://pixeldrain.com/api/file/${matchPixel[1]}`;
+                    }
+                } else {
+                    videoId = urlInput;
+                }
             } 
-            // Detección y limpieza inteligente de links y shorts de YouTube
+            // 3. DETECCIÓN Y LIMPIEZA INTACTA DE YOUTUBE Y SHORTS
             else if (urlInput.includes('youtube.com') || urlInput.includes('youtu.be')) {
                 tipoVideo = 'youtube';
                 if (urlInput.includes('/shorts/')) {
@@ -270,7 +282,6 @@
                 }
             }
 
-            // Reseteamos el estado de reproducción y guardamos la configuración limpia
             videoRef.set({ estado: -1, tiempo: 0, trigger: Date.now(), autor: miNombre });
             videoConfigRef.set({ id: videoId, tipo: tipoVideo });
             
