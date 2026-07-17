@@ -26,18 +26,24 @@
             min-height: 100vh;
         }
         
-        /* ESTILOS DEL TÍTULO ACTUALIZADOS (VERDE OSCURO, SIN BURBUJA BLANCA) */
+        /* CONTENEDOR PARA EL TEXTO Y EL GIF EN VERTICAL */
+        .cabecera-titulo {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 15px 0;
+            gap: 8px;
+        }
+
+        /* TEXTO CON RELLENO TRANSPARENTE Y BORDE BLANCO */
         h1 { 
             font-family: 'Gluten', cursive;
-            font-size: 2rem; 
-            margin: 15px 0; 
-            color: #2d4a3e; 
+            font-size: 2.2rem; 
+            margin: 0; 
+            color: transparent; /* Hace el interior transparente */
+            -webkit-text-stroke: 1.5px #ffffff; /* Dibuja el borde blanco */
             font-weight: 600;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff;
+            text-align: center;
         }
         
         .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 12px; }
@@ -107,12 +113,11 @@
 </head>
 <body>
 
-    <!-- ESTRUCTURA DEL TÍTULO ACTUALIZADA CON LOS GIFS SIMÉTRICOS -->
-    <h1> 
-        <img src="https://64.media.tumblr.com/cd9596e1fc92e03472431d887d260e0d/36c0b3272cc0390d-e3/s2048x3072/01de5883e0210aa19c35260e4ad4b293df5bc6d8.gif" style="height: 40px; vertical-align: middle;">
-        <span>* ゚ ゜. te quiero !</span>
-        <img src="https://64.media.tumblr.com/cd9596e1fc92e03472431d887d260e0d/36c0b3272cc0390d-e3/s2048x3072/01de5883e0210aa19c35260e4ad4b293df5bc6d8.gif" style="height: 40px; vertical-align: middle; transform: scaleX(-1);">
-    </h1>
+    <!-- NUEVA ESTRUCTURA EN CASCADA: TEXTO ARRIBA, UN SOLO GIF ABAJO -->
+    <div class="cabecera-titulo">
+        <h1><span>salita <3</span></h1>
+        <img src="https://64.media.tumblr.com/cd9596e1fc92e03472431d887d260e0d/36c0b3272cc0390d-e3/s2048x3072/01de5883e0210aa19c35260e4ad4b293df5bc6d8.gif" style="height: 40px;">
+    </div>
 
     <div class="sala-cine">
         <div class="contenedor-video">
