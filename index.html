@@ -10,6 +10,9 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
     
+    <!-- NUEVA TIPOGRAFÍA JUGUETONA IMPORTADA -->
+    <link href="https://fonts.googleapis.com/css2?family=Gluten:wght@400;600&display=swap" rel="stylesheet">
+    
     <style>
         * { box-sizing: border-box; }
         body {
@@ -23,15 +26,23 @@
             min-height: 100vh;
         }
         
+        /* ESTILOS DEL TÍTULO ACTUALIZADOS (VERDE OSCURO, SIN BURBUJA BLANCA) */
         h1 { 
-            font-size: 1.4rem; margin: 0 0 15px 0; color: #786460; font-weight: 600;
-            background: rgba(255, 255, 255, 0.7); padding: 8px 24px; border-radius: 20px;
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-            box-shadow: 0px 4px 10px rgba(120, 100, 96, 0.05);
+            font-family: 'Gluten', cursive;
+            font-size: 2rem; 
+            margin: 15px 0; 
+            color: #2d4a3e; 
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-shadow: 1px 1px 0px #fff, -1px -1px 0px #fff, 1px -1px 0px #fff, -1px 1px 0px #fff;
         }
         
         .sala-cine { width: 100%; max-width: 800px; display: flex; flex-direction: column; gap: 12px; }
         
+        /* CONTENEDOR AJUSTADO PARA QUE NO SE APLASTE CON EL TECLADO DEL CELULAR */
         .contenedor-video {
             width: 100%; aspect-ratio: 16 / 9; background: #000000; border-radius: 24px;
             box-shadow: 0px 8px 25px rgba(120, 100, 96, 0.15); overflow: hidden;
@@ -59,6 +70,7 @@
         }
         .panel-cambiar-video button:hover { opacity: 0.9; }
 
+        /* CHAT FLEXIBLE PARA QUE SE ENCOJA AL ABRIR EL TECLADO */
         .contenedor-chat {
             width: 100%; background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px); border-radius: 24px; display: flex;
@@ -95,11 +107,17 @@
 </head>
 <body>
 
-    <h1> <span>* ゚ ゜. te quiero !</span></h1>
+    <!-- ESTRUCTURA DEL TÍTULO ACTUALIZADA CON LOS GIFS SIMÉTRICOS -->
+    <h1> 
+        <img src="https://64.media.tumblr.com/cd9596e1fc92e03472431d887d260e0d/36c0b3272cc0390d-e3/s2048x3072/01de5883e0210aa19c35260e4ad4b293df5bc6d8.gif" style="height: 40px; vertical-align: middle;">
+        <span>* ゚ ゜. te quiero !</span>
+        <img src="https://64.media.tumblr.com/cd9596e1fc92e03472431d887d260e0d/36c0b3272cc0390d-e3/s2048x3072/01de5883e0210aa19c35260e4ad4b293df5bc6d8.gif" style="height: 40px; vertical-align: middle; transform: scaleX(-1);">
+    </h1>
 
     <div class="sala-cine">
         <div class="contenedor-video">
             <div id="player"></div>
+            <!-- SEGURO PARA PANTALLA COMPLETA EN IPHONE AÑADIDO -->
             <video id="video-directo-html5" controls playsinline webkit-playsinline style="display: none;">
                 <track id="subtitulos-track" label="Español" kind="captions" srclang="es" src="" default>
             </video>
